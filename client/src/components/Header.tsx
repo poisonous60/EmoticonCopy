@@ -4,6 +4,7 @@ import { Search, Menu, Upload, User, Sun, Moon } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import UploadDialog from "./UploadDialog";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -31,7 +32,9 @@ export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSe
           >
             <Menu className="h-5 w-5 text-foreground" />
           </Button>
-          <h1 className="text-xl font-bold pinterest-red">이모티콘 복사</h1>
+          <Link href="/">
+            <h1 className="text-xl font-bold pinterest-red cursor-pointer hover:opacity-80 transition-opacity">이모티콘 복사</h1>
+          </Link>
         </div>
         
         <div className="flex-1 max-w-2xl mx-8 hidden md:block">

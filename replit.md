@@ -172,6 +172,10 @@ Changelog:
   - Added loading indicators for initial load and subsequent page loads
   - Implemented proper "end of data" indicator when all emoticons are loaded
   - Scroll detection triggers 100px before reaching bottom for seamless experience
+- June 22, 2025. Added clickable logo navigation to header
+  - Made "이모티콘 복사" title in header clickable to return to main page
+  - Added hover effects with opacity transition for better user experience
+  - Integrated wouter Link component for client-side routing
 ```
 
 ## User Preferences
