@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import CategoryMenu from "./CategoryMenu";
 import UploadDialog from "./UploadDialog";
-import { Search, Clock, Upload } from "lucide-react";
+import { Search, Clock, Upload, Trash2 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { Emoticon } from "@shared/schema";
 
@@ -20,6 +21,8 @@ interface SidebarProps {
   setSearchQuery: (query: string) => void;
   showRecentlyCopied: boolean;
   setShowRecentlyCopied: (show: boolean) => void;
+  deleteMode: boolean;
+  setDeleteMode: (deleteMode: boolean) => void;
 }
 
 export default function Sidebar({
@@ -32,7 +35,9 @@ export default function Sidebar({
   searchQuery,
   setSearchQuery,
   showRecentlyCopied,
-  setShowRecentlyCopied
+  setShowRecentlyCopied,
+  deleteMode,
+  setDeleteMode
 }: SidebarProps) {
   const [recentlyCopied] = useLocalStorage<Emoticon[]>("recently-copied", []);
 
@@ -82,6 +87,24 @@ export default function Sidebar({
               최근 복사한 이모티콘
             </button>
 
+          </div>
+
+          <Separator className="mb-6" />
+
+          {/* Delete Toggle */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                  <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                </div>
+                <span className="font-medium text-gray-900 dark:text-gray-100">삭제 모드</span>
+              </div>
+              <Switch
+                checked={deleteMode}
+                onCheckedChange={setDeleteMode}
+              />
+            </div>
           </div>
 
           <Separator className="mb-6" />

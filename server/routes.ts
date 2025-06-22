@@ -306,6 +306,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete emoticon
+  app.delete("/api/emoticons/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid emoticon ID" });
+      }
+      
+      // Check if emoticon exists
+      const emoticon = await storage.getEmoticonById(id);
+      if (!emoticon) {
+        return res.status(404).json({ error: "Emoticon not found" });
+      }
+      
+      // Delete emoticon from database
+      await storage.deleteEmoticon(id);
+      
+      res.json({ message: "Emoticon deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting emoticon:", error);
+      res.status(500).json({ error: "Failed to delete emoticon" });
+    }
+  });
+
   // Seed database route
   app.post("/api/seed", async (req, res) => {
     try {

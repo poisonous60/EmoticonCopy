@@ -1,9 +1,10 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useCallback, useRef, useEffect, useState } from "react";
-import { Copy, Loader2 } from "lucide-react";
+import { Copy, Loader2, Trash2 } from "lucide-react";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { Emoticon } from "@shared/schema";
 
 interface EmoticonGridProps {
@@ -13,6 +14,7 @@ interface EmoticonGridProps {
   showRecentlyCopied: boolean;
   sortOrder: "newest" | "oldest" | "copied" | "random";
   setSortOrder: (order: "newest" | "oldest" | "copied" | "random") => void;
+  deleteMode: boolean;
 }
 
 export default function EmoticonGrid({ 
@@ -21,12 +23,44 @@ export default function EmoticonGrid({
   selectedSubcategory,
   showRecentlyCopied,
   sortOrder,
-  setSortOrder
+  setSortOrder,
+  deleteMode
 }: EmoticonGridProps) {
   const [recentlyCopied, setRecentlyCopied] = useLocalStorage<Emoticon[]>("recently-copied", []);
   
   const { copyToClipboard } = useClipboard();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (emoticonId: number) => {
+      return await apiRequest(`/api/emoticons/${emoticonId}`, "DELETE");
+    },
+    onSuccess: () => {
+      // Invalidate and refetch emoticons
+      queryClient.invalidateQueries({ queryKey: ["/api/emoticons"] });
+      toast({
+        title: "삭제 완료",
+        description: "이모티콘이 성공적으로 삭제되었습니다.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "삭제 실패",
+        description: "이모티콘 삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete confirmation handler
+  const handleDeleteEmoticon = useCallback(async (emoticon: Emoticon) => {
+    const confirmed = window.confirm("정말로 삭제하시겠습니까?");
+    if (confirmed) {
+      deleteMutation.mutate(emoticon.id);
+    }
+  }, [deleteMutation]);
 
   // Build query parameters
   const baseParams = useMemo(() => {
@@ -224,7 +258,7 @@ export default function EmoticonGrid({
               className={`group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden emoticon-item ${
                 isMobile ? '' : 'cursor-pointer active:scale-95'
               }`}
-              onClick={isMobile ? undefined : () => handleCopyEmoticon(emoticon)}
+              onClick={isMobile ? undefined : deleteMode ? () => handleDeleteEmoticon(emoticon) : () => handleCopyEmoticon(emoticon)}
             >
               <div className="w-full relative">
                 <img
@@ -239,8 +273,12 @@ export default function EmoticonGrid({
                 {!isMobile && (
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-200">
-                      <div className="bg-white rounded-full p-2 shadow-lg">
-                        <Copy className="h-4 w-4 pinterest-red" />
+                      <div className={`rounded-full p-2 shadow-lg ${deleteMode ? 'bg-red-500' : 'bg-white'}`}>
+                        {deleteMode ? (
+                          <Trash2 className="h-4 w-4 text-white" />
+                        ) : (
+                          <Copy className="h-4 w-4 pinterest-red" />
+                        )}
                       </div>
                     </div>
                   </div>

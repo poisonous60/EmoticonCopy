@@ -10,6 +10,7 @@ export interface IStorage {
   getEmoticons(offset?: number, limit?: number, category?: string, subcategory?: string, sort?: string): Promise<Emoticon[]>;
   getEmoticonById(id: number): Promise<Emoticon | undefined>;
   createEmoticon(emoticon: InsertEmoticon): Promise<Emoticon>;
+  deleteEmoticon(id: number): Promise<void>;
   searchEmoticons(query: string, offset?: number, limit?: number): Promise<Emoticon[]>;
   getEmoticonByHash(hash: string): Promise<Emoticon | undefined>;
   updateEmoticonUploadDate(id: number): Promise<Emoticon>;
@@ -154,6 +155,23 @@ export class MemStorage implements IStorage {
       .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
       .slice(offset, offset + limit);
   }
+
+  async deleteEmoticon(id: number): Promise<void> {
+    this.emoticons.delete(id);
+  }
+
+  async getEmoticonByHash(hash: string): Promise<Emoticon | undefined> {
+    return undefined; // Not implemented for MemStorage
+  }
+
+  async updateEmoticonUploadDate(id: number): Promise<Emoticon> {
+    const emoticon = this.emoticons.get(id);
+    if (!emoticon) {
+      throw new Error(`Emoticon with id ${id} not found`);
+    }
+    emoticon.createdAt = new Date();
+    return emoticon;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -257,6 +275,10 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return emoticon;
+  }
+
+  async deleteEmoticon(id: number): Promise<void> {
+    await db.delete(emoticons).where(eq(emoticons.id, id));
   }
 }
 

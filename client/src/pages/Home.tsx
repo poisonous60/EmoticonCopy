@@ -10,6 +10,7 @@ export default function Home() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [showRecentlyCopied, setShowRecentlyCopied] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "copied" | "random">("newest");
+  const [deleteMode, setDeleteMode] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,6 +33,8 @@ export default function Home() {
           setSearchQuery={setSearchQuery}
           showRecentlyCopied={showRecentlyCopied}
           setShowRecentlyCopied={setShowRecentlyCopied}
+          deleteMode={deleteMode}
+          setDeleteMode={setDeleteMode}
         />
         
         {/* Sidebar Overlay */}
@@ -50,6 +53,7 @@ export default function Home() {
             showRecentlyCopied={showRecentlyCopied}
             sortOrder={sortOrder}
             setSortOrder={setSortOrder}
+            deleteMode={deleteMode}
           />
         </main>
       </div>
