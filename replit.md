@@ -156,7 +156,7 @@ Changelog:
   - Disabled automatic copy events on mobile devices to prevent conflicts
   - Made images selectable on mobile with enhanced user selection properties
   - Maintained desktop clipboard functionality while improving mobile experience
-  - Updated file storage to use /tmp/persistent-uploads for better deployment persistence
+  - Simplified file storage to use local uploads/ directory for consistency
   - Removed touch event handlers that interfered with natural mobile selection
 ```
 
