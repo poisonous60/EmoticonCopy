@@ -196,6 +196,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create multiple emoticons with batch file upload
+  app.post("/api/emoticons/batch", upload.array('images', 100), async (req, res) => {
+    const uploadedFiles = req.files as Express.Multer.File[] || [];
+    const createdEmoticons = [];
+    const errors = [];
+    
+    try {
+      if (uploadedFiles.length === 0) {
+        return res.status(400).json({ error: "No image files uploaded" });
+      }
+
+      if (uploadedFiles.length > 100) {
+        return res.status(400).json({ error: "Maximum 100 files allowed" });
+      }
+
+      const { category = "기타", subcategory } = req.body;
+
+      for (const file of uploadedFiles) {
+        try {
+          // Validate that it's an image
+          if (!file.mimetype.startsWith('image/')) {
+            await fs.unlink(file.path).catch(() => {});
+            errors.push({ filename: file.originalname, error: "File must be an image" });
+            continue;
+          }
+
+          // Calculate file hash for duplicate detection
+          const fileBuffer = await fs.readFile(file.path);
+          const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+          // Check for existing emoticon with same hash
+          const existingEmoticon = await storage.getEmoticonByHash(fileHash);
+          
+          if (existingEmoticon) {
+            // Delete the newly uploaded file since it's a duplicate
+            await fs.unlink(file.path).catch(() => {});
+            
+            // Update the upload date of existing emoticon
+            const updatedEmoticon = await storage.updateEmoticonUploadDate(existingEmoticon.id);
+            createdEmoticons.push(updatedEmoticon);
+            continue;
+          }
+
+          // Convert file to Base64 for database storage
+          const fileData = fileBuffer.toString('base64');
+          
+          const emoticon = await storage.createEmoticon({
+            filename: file.filename,
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+            fileHash,
+            fileData,
+            category,
+            subcategory: subcategory || null,
+            title: file.originalname.split('.')[0],
+            tags: [file.originalname.split('.')[0].toLowerCase()],
+          });
+
+          createdEmoticons.push(emoticon);
+          
+          // Clean up the uploaded file after processing
+          await fs.unlink(file.path).catch(() => {});
+          
+        } catch (error) {
+          // Clean up file on error
+          await fs.unlink(file.path).catch(() => {});
+          errors.push({ 
+            filename: file.originalname, 
+            error: error instanceof Error ? error.message : "Unknown error" 
+          });
+        }
+      }
+
+      res.status(201).json({
+        success: createdEmoticons.length,
+        errors: errors.length,
+        emoticons: createdEmoticons,
+        errorDetails: errors
+      });
+      
+    } catch (error) {
+      // Cleanup all uploaded files if there was a general error
+      for (const file of uploadedFiles) {
+        await fs.unlink(file.path).catch(() => {});
+      }
+      
+      console.error("Error in batch upload:", error);
+      res.status(500).json({ error: "Failed to process batch upload" });
+    }
+  });
+
   // Get categories (for sidebar)
   app.get("/api/categories", async (req, res) => {
     try {
