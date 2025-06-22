@@ -6,7 +6,7 @@ export const emoticons = pgTable("emoticons", {
   id: serial("id").primaryKey(),
   url: text("url").notNull(),
   category: text("category").notNull(), // 디시콘, 아카콘, 카톡이모티콘, 기타
-  subcategory: text("subcategory").notNull(), // 게임, 영상, 캐릭터, etc.
+  subcategory: text("subcategory"), // 게임, 영상, 캐릭터, etc.
   tags: text("tags").array().default([]),
   title: text("title"),
   createdAt: timestamp("created_at").defaultNow(),

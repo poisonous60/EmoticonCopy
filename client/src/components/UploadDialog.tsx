@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -17,9 +16,6 @@ interface UploadDialogProps {
 export default function UploadDialog({ categories }: UploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
   const [isValidating, setIsValidating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
@@ -91,21 +87,25 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!url || !title || !category || !previewUrl) {
+    if (!url || !previewUrl) {
       toast({
-        title: "필수 정보 누락",
-        description: "모든 필드를 입력하고 이미지를 검증해주세요.",
+        title: "이미지 URL 필요",
+        description: "이미지 URL을 입력하고 검증해주세요.",
         variant: "destructive",
       });
       return;
     }
 
+    // Generate a simple title from URL
+    const urlParts = url.split('/');
+    const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params for title
+    const title = fileName.split('.')[0] || 'emoticon';
+
     const emoticon: InsertEmoticon = {
       url: url.trim(),
-      title: title.trim(),
-      category,
-      subcategory: subcategory && subcategory.trim() ? subcategory.trim() : null,
-      tags: [title.trim().toLowerCase()],
+      title: title,
+      category: "기타", // Default category
+      tags: [title.toLowerCase()],
     };
 
     uploadMutation.mutate(emoticon);
@@ -114,13 +114,8 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
   const handleClose = () => {
     setOpen(false);
     setUrl("");
-    setTitle("");
-    setCategory("");
-    setSubcategory("");
     setPreviewUrl(null);
   };
-
-  const subcategories = category ? categories[category] || [] : [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -167,51 +162,6 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
                   className="max-w-32 max-h-32 object-contain border rounded-lg"
                 />
               </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="title">제목</Label>
-            <Input
-              id="title"
-              placeholder="이모티콘 제목"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="category">카테고리</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="카테고리 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(categories).map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {subcategories.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="subcategory">세부 카테고리 (선택)</Label>
-              <Select value={subcategory} onValueChange={setSubcategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="세부 카테고리 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">없음</SelectItem>
-                  {subcategories.map((subcat) => (
-                    <SelectItem key={subcat} value={subcat}>
-                      {subcat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           )}
 

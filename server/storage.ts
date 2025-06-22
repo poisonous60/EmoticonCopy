@@ -128,7 +128,7 @@ export class MemStorage implements IStorage {
       id,
       url: insertEmoticon.url,
       category: insertEmoticon.category,
-      subcategory: insertEmoticon.subcategory,
+      subcategory: insertEmoticon.subcategory ?? null,
       tags: insertEmoticon.tags || null,
       title: insertEmoticon.title || null,
       createdAt: new Date()
@@ -142,7 +142,7 @@ export class MemStorage implements IStorage {
       emoticon.title?.toLowerCase().includes(query.toLowerCase()) ||
       (emoticon.tags && emoticon.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))) ||
       emoticon.category.toLowerCase().includes(query.toLowerCase()) ||
-      emoticon.subcategory.toLowerCase().includes(query.toLowerCase())
+      emoticon.subcategory?.toLowerCase().includes(query.toLowerCase())
     );
     
     return filtered
