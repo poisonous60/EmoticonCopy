@@ -152,6 +152,12 @@ Changelog:
   - Fixed file persistence across deployments using persistent storage path
   - Configured uploads directory to survive deployment restarts
   - Ensured uploaded images remain accessible after redeployment
+- June 22, 2025. Modified mobile behavior for image selection instead of clipboard copying
+  - Disabled automatic copy events on mobile devices to prevent conflicts
+  - Made images selectable on mobile with enhanced user selection properties
+  - Maintained desktop clipboard functionality while improving mobile experience
+  - Updated file storage to use /tmp/persistent-uploads for better deployment persistence
+  - Removed touch event handlers that interfered with natural mobile selection
 ```
 
 ## User Preferences

@@ -51,12 +51,19 @@ export default function EmoticonGrid({
   const emoticons = showRecentlyCopied ? recentlyCopied : apiEmoticons;
 
   const handleCopyEmoticon = async (emoticon: Emoticon) => {
-    console.log('Mobile copy triggered for emoticon:', emoticon.id);
+    // Check if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     ('ontouchstart' in window) || 
+                     (navigator.maxTouchPoints > 0);
+
+    // On mobile, don't trigger copy - let user select image instead
+    if (isMobile) {
+      return;
+    }
+
     try {
       const imageUrl = `/uploads/${emoticon.filename}`;
-      console.log('Copying image URL:', imageUrl);
       await copyToClipboard(imageUrl);
-      console.log('Copy successful');
       
       // Add to recently copied (max 20 items)
       setRecentlyCopied(prev => {
@@ -70,7 +77,6 @@ export default function EmoticonGrid({
         duration: 2000,
       });
     } catch (error) {
-      console.error('Copy failed:', error);
       toast({
         title: "복사 실패",
         description: "이모티콘을 복사할 수 없습니다.",
@@ -104,40 +110,42 @@ export default function EmoticonGrid({
 
       {/* Emoticon Grid */}
       <div className="emoticon-grid">
-        {emoticons.map((emoticon) => (
-          <div
-            key={emoticon.id}
-            className="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md active:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden emoticon-item active:scale-95"
-            onClick={() => handleCopyEmoticon(emoticon)}
-            onTouchStart={(e) => {
-              console.log('Touch start event triggered');
-              // Prevent double-tap zoom on mobile
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }}
-            onTouchEnd={(e) => {
-              console.log('Touch end event triggered');
-              e.currentTarget.style.transform = 'scale(1)';
-              // Ensure touch triggers the copy on mobile
-              handleCopyEmoticon(emoticon);
-            }}
-          >
-            <div className="w-full relative">
-              <img
-                src={`/uploads/${emoticon.filename}`}
-                alt={emoticon.title || "Emoticon"}
-                className="w-full h-auto object-contain"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-200">
-                  <div className="bg-white rounded-full p-2 shadow-lg">
-                    <Copy className="h-4 w-4 pinterest-red" />
+        {emoticons.map((emoticon) => {
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                           ('ontouchstart' in window) || 
+                           (navigator.maxTouchPoints > 0);
+
+          return (
+            <div
+              key={emoticon.id}
+              className={`group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden emoticon-item ${
+                isMobile ? '' : 'cursor-pointer active:scale-95'
+              }`}
+              onClick={isMobile ? undefined : () => handleCopyEmoticon(emoticon)}
+            >
+              <div className="w-full relative">
+                <img
+                  src={`/uploads/${emoticon.filename}`}
+                  alt={emoticon.title || "Emoticon"}
+                  className={`w-full h-auto object-contain ${
+                    isMobile ? 'select-all pointer-events-auto' : 'select-none'
+                  }`}
+                  loading="lazy"
+                  style={isMobile ? { userSelect: 'all', WebkitUserSelect: 'all' } : {}}
+                />
+                {!isMobile && (
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-200">
+                      <div className="bg-white rounded-full p-2 shadow-lg">
+                        <Copy className="h-4 w-4 pinterest-red" />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Loading Indicator */}

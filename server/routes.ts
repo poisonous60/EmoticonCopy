@@ -14,7 +14,7 @@ import fs from "fs/promises";
 // Ensure uploads directory exists and use persistent path
 import { mkdir } from "fs/promises";
 
-const UPLOADS_DIR = process.env.REPLIT_DB_URL ? '/home/runner/uploads' : 'uploads';
+const UPLOADS_DIR = process.env.REPLIT_DB_URL ? '/tmp/persistent-uploads' : 'uploads';
 
 // Create uploads directory if it doesn't exist
 async function ensureUploadsDir() {
