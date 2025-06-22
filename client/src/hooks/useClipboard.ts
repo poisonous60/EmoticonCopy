@@ -9,102 +9,67 @@ export function useClipboard() {
                      ('ontouchstart' in window) || 
                      (navigator.maxTouchPoints > 0);
 
-    // For mobile devices, try to copy image first, then fallback
+    console.log('Starting clipboard operation. Mobile detected:', isMobile);
+    console.log('Image URL:', imageUrl);
+    console.log('Clipboard API available:', !!navigator.clipboard);
+    console.log('ClipboardItem available:', !!window.ClipboardItem);
+
+    // For mobile devices, use simplified approach
     if (isMobile) {
+      console.log('Attempting mobile clipboard copy');
+      
       try {
-        // Try to copy the actual image first (iOS Safari supports this)
+        // Try to fetch and copy the image directly
+        console.log('Fetching image blob...');
         const response = await fetch(imageUrl);
         const blob = await response.blob();
+        console.log('Blob fetched, type:', blob.type, 'size:', blob.size);
         
         if (navigator.clipboard && window.ClipboardItem) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                [blob.type]: blob
-              })
-            ]);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-            return;
-          } catch (clipboardError) {
-            console.warn('Mobile image clipboard failed, trying canvas conversion:', clipboardError);
-          }
+          console.log('Attempting clipboard write with blob...');
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              [blob.type]: blob
+            })
+          ]);
+          console.log('Successfully copied image to clipboard!');
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          return;
+        } else {
+          console.log('Clipboard API not available, falling back to URL copy');
+          throw new Error('Clipboard API not supported');
         }
-
-        // Try canvas conversion for mobile
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        return new Promise((resolve, reject) => {
-          img.onload = async () => {
-            try {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              
-              if (!ctx) {
-                throw new Error('Could not get canvas context');
-              }
-              
-              canvas.width = img.width;
-              canvas.height = img.height;
-              ctx.drawImage(img, 0, 0);
-              
-              canvas.toBlob(async (pngBlob) => {
-                if (pngBlob && navigator.clipboard && window.ClipboardItem) {
-                  try {
-                    await navigator.clipboard.write([
-                      new ClipboardItem({
-                        'image/png': pngBlob
-                      })
-                    ]);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                    resolve();
-                  } catch (clipboardError) {
-                    console.warn('Mobile clipboard write failed, falling back to URL:', clipboardError);
-                    await navigator.clipboard.writeText(window.location.origin + imageUrl);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                    resolve();
-                  }
-                } else {
-                  // Final fallback: copy URL
-                  await navigator.clipboard.writeText(window.location.origin + imageUrl);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                  resolve();
-                }
-              }, 'image/png');
-            } catch (canvasError) {
-              console.warn('Canvas conversion failed on mobile:', canvasError);
-              try {
-                await navigator.clipboard.writeText(window.location.origin + imageUrl);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-                resolve();
-              } catch (urlError) {
-                reject(urlError);
-              }
-            }
-          };
-          
-          img.onerror = async () => {
-            console.warn('Image load failed on mobile');
-            try {
-              await navigator.clipboard.writeText(window.location.origin + imageUrl);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-              resolve();
-            } catch (urlError) {
-              reject(urlError);
-            }
-          };
-          
-          img.src = imageUrl;
-        });
       } catch (error) {
-        console.error('Mobile copy failed:', error);
-        throw error;
+        console.warn('Direct image copy failed, trying URL fallback:', error);
+        
+        // Fallback to copying URL
+        try {
+          if (navigator.clipboard) {
+            await navigator.clipboard.writeText(window.location.origin + imageUrl);
+            console.log('URL copied to clipboard as fallback');
+          } else {
+            // Last resort: create temporary input for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = window.location.origin + imageUrl;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            console.log('URL copied using fallback method');
+          }
+          
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          return;
+        } catch (fallbackError) {
+          console.error('All mobile clipboard methods failed:', fallbackError);
+          throw fallbackError;
+        }
       }
     }
 

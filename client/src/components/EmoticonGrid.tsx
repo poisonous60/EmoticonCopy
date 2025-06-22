@@ -51,9 +51,12 @@ export default function EmoticonGrid({
   const emoticons = showRecentlyCopied ? recentlyCopied : apiEmoticons;
 
   const handleCopyEmoticon = async (emoticon: Emoticon) => {
+    console.log('Mobile copy triggered for emoticon:', emoticon.id);
     try {
       const imageUrl = `/uploads/${emoticon.filename}`;
+      console.log('Copying image URL:', imageUrl);
       await copyToClipboard(imageUrl);
+      console.log('Copy successful');
       
       // Add to recently copied (max 20 items)
       setRecentlyCopied(prev => {
@@ -67,6 +70,7 @@ export default function EmoticonGrid({
         duration: 2000,
       });
     } catch (error) {
+      console.error('Copy failed:', error);
       toast({
         title: "복사 실패",
         description: "이모티콘을 복사할 수 없습니다.",
@@ -106,11 +110,15 @@ export default function EmoticonGrid({
             className="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md active:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden emoticon-item active:scale-95"
             onClick={() => handleCopyEmoticon(emoticon)}
             onTouchStart={(e) => {
+              console.log('Touch start event triggered');
               // Prevent double-tap zoom on mobile
               e.currentTarget.style.transform = 'scale(0.95)';
             }}
             onTouchEnd={(e) => {
+              console.log('Touch end event triggered');
               e.currentTarget.style.transform = 'scale(1)';
+              // Ensure touch triggers the copy on mobile
+              handleCopyEmoticon(emoticon);
             }}
           >
             <div className="w-full relative">
