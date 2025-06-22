@@ -181,6 +181,11 @@ Changelog:
   - Updated backend DatabaseStorage to handle random sorting with SQL RANDOM() function
   - Added proper TypeScript types for "random" sort order across all components
   - Random sorting provides completely shuffled emoticon order for discovery
+- June 22, 2025. Added "전체 이모티콘" category to sidebar menu
+  - Added "전체 이모티콘" as first option in categories list with Grid3X3 icon
+  - Selecting "전체 이모티콘" clears all category/subcategory filters to show all emoticons
+  - Visual selection state shows "전체 이모티콘" as selected when no specific category is chosen
+  - Does not expand/collapse like other categories since it has no subcategories
 ```
 
 ## User Preferences

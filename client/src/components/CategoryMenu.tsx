@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, MessageSquare, Tv, MessageCircle, Star } from "lucide-react";
+import { ChevronDown, MessageSquare, Tv, MessageCircle, Star, Grid3X3 } from "lucide-react";
 
 interface CategoryMenuProps {
   categories: Record<string, string[]>;
@@ -13,6 +13,7 @@ interface CategoryMenuProps {
 }
 
 const categoryIcons: Record<string, any> = {
+  "전체 이모티콘": Grid3X3,
   "디시콘": MessageSquare,
   "아카콘": Tv,
   "카톡이모티콘": MessageCircle,
@@ -20,6 +21,7 @@ const categoryIcons: Record<string, any> = {
 };
 
 const categoryColors: Record<string, string> = {
+  "전체 이모티콘": "bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400",
   "디시콘": "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
   "아카콘": "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
   "카톡이모티콘": "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400",
@@ -47,7 +49,11 @@ export default function CategoryMenu({
   };
 
   const handleCategorySelect = (category: string) => {
-    if (selectedCategory === category) {
+    if (category === "전체 이모티콘") {
+      // For "전체 이모티콘", clear all filters to show all emoticons
+      setSelectedCategory("");
+      setSelectedSubcategory("");
+    } else if (selectedCategory === category) {
       setSelectedCategory("");
       setSelectedSubcategory("");
     } else {
@@ -55,7 +61,11 @@ export default function CategoryMenu({
       setSelectedSubcategory("");
     }
     setShowRecentlyCopied?.(false);
-    toggleCategory(category);
+    
+    // Don't toggle collapsible for "전체 이모티콘" since it has no subcategories
+    if (category !== "전체 이모티콘") {
+      toggleCategory(category);
+    }
   };
 
   const handleSubcategorySelect = (subcategory: string) => {
@@ -72,7 +82,9 @@ export default function CategoryMenu({
       {Object.entries(categories).map(([category, subcategories]) => {
         const Icon = categoryIcons[category];
         const isOpen = openCategories.has(category);
-        const isSelected = selectedCategory === category;
+        const isSelected = category === "전체 이모티콘" 
+          ? selectedCategory === "" // "전체 이모티콘" is selected when no category is selected
+          : selectedCategory === category;
 
         return (
           <Collapsible

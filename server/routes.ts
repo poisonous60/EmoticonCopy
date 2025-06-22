@@ -293,6 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = {
+        "전체 이모티콘": [],
         "디시콘": ["게임", "영상", "캐릭터", "기타"],
         "아카콘": ["아프리카TV", "트위치", "유튜브"],
         "카톡이모티콘": ["캐릭터", "동물", "브랜드"],
