@@ -80,24 +80,7 @@ export default function Sidebar({
               <Clock className="h-4 w-4 mr-2" />
               최근 복사한 이모티콘
             </button>
-            {recentlyCopied.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {recentlyCopied.slice(0, 6).map((emoticon, index) => (
-                  <div
-                    key={`${emoticon.id}-${index}`}
-                    className="aspect-square bg-white rounded-lg border border-gray-200 cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-                  >
-                    <img
-                      src={emoticon.url}
-                      alt={emoticon.title || "Recent emoticon"}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">아직 복사한 이모티콘이 없습니다.</p>
-            )}
+
           </div>
 
           <Separator className="mb-6" />
