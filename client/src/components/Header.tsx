@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Menu, Upload, User } from "lucide-react";
+import { Search, Menu, Upload, User, Sun, Moon } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -10,8 +11,10 @@ interface HeaderProps {
 }
 
 export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSearchQuery }: HeaderProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+    <header className="fixed top-0 left-0 right-0 bg-background dark:bg-background border-b border-border z-50">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-4">
           <Button
@@ -20,7 +23,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSe
             className="lg:hidden p-2"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            <Menu className="h-5 w-5 text-gray-600" />
+            <Menu className="h-5 w-5 text-foreground" />
           </Button>
           <h1 className="text-xl font-bold pinterest-red">이모티콘 복사</h1>
         </div>
@@ -32,9 +35,9 @@ export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSe
               placeholder="이모티콘 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 bg-gray-100 border-none rounded-full focus:ring-2 focus:ring-primary"
+              className="w-full pl-10 bg-muted dark:bg-muted border-none rounded-full focus:ring-2 focus:ring-primary"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
         </div>
         
@@ -46,8 +49,20 @@ export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSe
             <Upload className="h-4 w-4" />
             <span>업로드</span>
           </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-2"
+            onClick={toggleTheme}
+          >
+            {theme === "light" ? (
+              <Moon className="h-5 w-5 text-foreground" />
+            ) : (
+              <Sun className="h-5 w-5 text-foreground" />
+            )}
+          </Button>
           <Button variant="ghost" size="sm" className="p-2">
-            <User className="h-5 w-5 text-gray-600" />
+            <User className="h-5 w-5 text-foreground" />
           </Button>
         </div>
       </div>

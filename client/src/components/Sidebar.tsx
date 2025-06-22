@@ -42,7 +42,7 @@ export default function Sidebar({
 
   return (
     <aside className={`
-      fixed lg:static inset-y-0 left-0 w-80 bg-sidebar border-r border-gray-200 
+      fixed lg:static inset-y-0 left-0 w-80 bg-sidebar dark:bg-sidebar border-r border-border 
       transform transition-transform duration-300 ease-in-out z-40 pt-16 lg:pt-0
       ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
     `}>
@@ -56,7 +56,7 @@ export default function Sidebar({
                 placeholder="이모티콘 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary"
+                className="w-full pl-10 bg-background dark:bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
@@ -75,7 +75,7 @@ export default function Sidebar({
               className={`w-full text-left text-sm font-semibold mb-3 flex items-center p-2 rounded-lg transition-colors ${
                 showRecentlyCopied 
                   ? 'text-primary bg-primary/10' 
-                  : 'text-gray-700 hover:text-primary hover:bg-gray-50'
+                  : 'text-foreground hover:text-primary hover:bg-muted'
               }`}
             >
               <Clock className="h-4 w-4 mr-2" />

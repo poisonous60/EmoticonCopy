@@ -129,6 +129,12 @@ Changelog:
   - Duplicate uploads show success message but update existing entry date
   - Failed uploads automatically cleaned from uploads folder and database
   - Database schema includes fileHash field with unique constraint
+- June 22, 2025. Added dark mode and light mode toggle functionality
+  - Created ThemeProvider component with localStorage persistence
+  - Added sun/moon icons next to user profile icon in header
+  - Updated all components with dark mode styling using CSS variables
+  - Theme toggle button switches between light and dark themes
+  - System preference detection for initial theme selection
 ```
 
 ## User Preferences
