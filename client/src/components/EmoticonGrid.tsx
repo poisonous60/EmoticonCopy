@@ -11,8 +11,8 @@ interface EmoticonGridProps {
   selectedCategory: string;
   selectedSubcategory: string;
   showRecentlyCopied: boolean;
-  sortOrder: "newest" | "oldest" | "copied";
-  setSortOrder: (order: "newest" | "oldest" | "copied") => void;
+  sortOrder: "newest" | "oldest" | "copied" | "random";
+  setSortOrder: (order: "newest" | "oldest" | "copied" | "random") => void;
 }
 
 export default function EmoticonGrid({ 
@@ -162,7 +162,8 @@ export default function EmoticonGrid({
     const nextOrder = {
       newest: "oldest" as const,
       oldest: "copied" as const,
-      copied: "newest" as const,
+      copied: "random" as const,
+      random: "newest" as const,
     };
     
     setSortOrder(nextOrder[sortOrder]);
@@ -176,6 +177,7 @@ export default function EmoticonGrid({
       case 'newest': return '최신순';
       case 'oldest': return '오래된순';
       case 'copied': return '복사순';
+      case 'random': return '랜덤순';
       default: return '최신순';
     }
   };

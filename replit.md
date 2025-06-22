@@ -176,6 +176,11 @@ Changelog:
   - Made "이모티콘 복사" title in header clickable to return to main page
   - Added hover effects with opacity transition for better user experience
   - Integrated wouter Link component for client-side routing
+- June 22, 2025. Implemented random sorting functionality
+  - Added "random" option to sort cycling sequence: newest → oldest → copied → random → newest
+  - Updated backend DatabaseStorage to handle random sorting with SQL RANDOM() function
+  - Added proper TypeScript types for "random" sort order across all components
+  - Random sorting provides completely shuffled emoticon order for discovery
 ```
 
 ## User Preferences

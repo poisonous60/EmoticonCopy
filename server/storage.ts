@@ -1,6 +1,6 @@
 import { emoticons, users, type Emoticon, type InsertEmoticon, type User, type InsertUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike, or, desc, asc, and } from "drizzle-orm";
+import { eq, ilike, or, desc, asc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -193,6 +193,8 @@ export class DatabaseStorage implements IStorage {
       // For copied sort, we'll use createdAt in descending order for now
       // This could be enhanced with a separate copyCount field in the future
       query = query.orderBy(desc(emoticons.createdAt));
+    } else if (sort === 'random') {
+      query = query.orderBy(sql`RANDOM()`);
     } else {
       // Default to newest
       query = query.orderBy(desc(emoticons.createdAt));
