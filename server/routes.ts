@@ -1,11 +1,43 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import multer from "multer";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { storage } from "./storage";
 import { insertEmoticonSchema } from "@shared/schema";
 import { z } from "zod";
 import { seedDatabase } from "./seed";
 
+// Configure multer for file uploads
+const storage_config = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage: storage_config,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded files statically
+  app.use('/uploads', express.static('uploads'));
+  
   // Get emoticons with optional filtering
   app.get("/api/emoticons", async (req, res) => {
     try {
@@ -49,16 +81,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new emoticon
-  app.post("/api/emoticons", async (req, res) => {
+  // Create new emoticon with file upload
+  app.post("/api/emoticons", upload.single('image'), async (req, res) => {
     try {
-      const validatedData = insertEmoticonSchema.parse(req.body);
-      const emoticon = await storage.createEmoticon(validatedData);
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file uploaded" });
+      }
+
+      const { category = "기타", subcategory, title, tags } = req.body;
+      
+      const emoticon = await storage.createEmoticon({
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        fileSize: req.file.size,
+        category,
+        subcategory: subcategory || null,
+        title: title || req.file.originalname.split('.')[0],
+        tags: tags ? JSON.parse(tags) : [req.file.originalname.split('.')[0].toLowerCase()],
+      });
+      
       res.status(201).json(emoticon);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid data", details: error.errors });
-      }
+      console.error("Error creating emoticon:", error);
       res.status(500).json({ error: "Failed to create emoticon" });
     }
   });

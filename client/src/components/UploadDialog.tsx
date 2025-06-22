@@ -1,13 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Loader2 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import type { InsertEmoticon } from "@shared/schema";
+import { Upload, Loader2, X, ImageIcon } from "lucide-react";
 
 interface UploadDialogProps {
   categories: Record<string, string[]>;
@@ -15,26 +11,42 @@ interface UploadDialogProps {
 
 export default function UploadDialog({ categories }: UploadDialogProps) {
   const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
-    mutationFn: async (emoticon: InsertEmoticon) => {
-      return apiRequest("POST", "/api/emoticons", emoticon);
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('category', '기타');
+      formData.append('title', file.name.split('.')[0]);
+      formData.append('tags', JSON.stringify([file.name.split('.')[0].toLowerCase()]));
+
+      const response = await fetch("/api/emoticons", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/emoticons"] });
       toast({
-        title: "업로드 완료!",
-        description: "이모티콘이 성공적으로 추가되었습니다.",
+        title: "성공!",
+        description: "이모티콘이 성공적으로 업로드되었습니다.",
       });
       handleClose();
     },
     onError: (error) => {
+      console.error("Upload failed:", error);
       toast({
         title: "업로드 실패",
         description: "이모티콘 업로드 중 오류가 발생했습니다.",
@@ -43,86 +55,93 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
     },
   });
 
-  const validateImageUrl = async (imageUrl: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = imageUrl;
-    });
-  };
-
-  const handleUrlValidation = async () => {
-    if (!url.trim()) return;
-    
-    setIsValidating(true);
-    setPreviewUrl(null);
-    
-    try {
-      const isValid = await validateImageUrl(url);
-      if (isValid) {
-        setPreviewUrl(url);
-        toast({
-          title: "유효한 이미지 URL",
-          description: "이미지를 확인했습니다.",
-        });
-      } else {
-        toast({
-          title: "유효하지 않은 URL",
-          description: "이미지를 불러올 수 없습니다. URL을 확인해주세요.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+  const handleFileSelect = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
       toast({
-        title: "검증 실패",
-        description: "URL 검증 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!url || !previewUrl) {
-      toast({
-        title: "이미지 URL 필요",
-        description: "이미지 URL을 입력하고 검증해주세요.",
+        title: "잘못된 파일 형식",
+        description: "이미지 파일만 업로드할 수 있습니다.",
         variant: "destructive",
       });
       return;
     }
 
-    // Generate a simple title from URL
-    const urlParts = url.split('/');
-    const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params for title
-    const title = fileName.split('.')[0] || 'emoticon';
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast({
+        title: "파일이 너무 큽니다",
+        description: "10MB 이하의 파일만 업로드할 수 있습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const emoticon: InsertEmoticon = {
-      url: url.trim(),
-      title: title,
-      category: "기타", // Default category
-      tags: [title.toLowerCase()],
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
     };
+    reader.readAsDataURL(file);
+  }, [toast]);
 
-    uploadMutation.mutate(emoticon);
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  }, [handleFileSelect]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  }, [handleFileSelect]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedFile) {
+      toast({
+        title: "파일을 선택해주세요",
+        description: "업로드할 이미지 파일을 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    uploadMutation.mutate(selectedFile);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setUrl("");
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setIsDragOver(false);
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
     setPreviewUrl(null);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-pinterest-red hover:bg-red-700 text-white rounded-lg">
-          <Upload className="h-4 w-4 mr-2" />
-          이모티콘 업로드
+        <Button variant="outline" size="sm" className="gap-2">
+          <Upload className="h-4 w-4" />
+          업로드
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
@@ -130,40 +149,63 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
           <DialogTitle>새 이모티콘 업로드</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="url">이미지 URL</Label>
-            <div className="flex space-x-2">
-              <Input
-                id="url"
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                onClick={handleUrlValidation}
-                disabled={!url.trim() || isValidating}
-                variant="outline"
-              >
-                {isValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : "검증"}
-              </Button>
-            </div>
-          </div>
-
-          {previewUrl && (
-            <div className="space-y-2">
-              <Label>미리보기</Label>
-              <div className="flex justify-center">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-w-32 max-h-32 object-contain border rounded-lg"
+          {/* File Drop Zone */}
+          <div
+            className={`
+              border-2 border-dashed rounded-lg p-6 text-center transition-colors
+              ${isDragOver 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+              }
+            `}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            {selectedFile ? (
+              <div className="space-y-4">
+                {previewUrl && (
+                  <div className="relative">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="max-w-full max-h-32 mx-auto object-contain rounded"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                      onClick={removeFile}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  {selectedFile.name}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">이미지를 드래그하여 업로드</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    또는 클릭하여 파일 선택
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInputChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="flex space-x-2 pt-4">
             <Button
@@ -176,7 +218,7 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
             </Button>
             <Button
               type="submit"
-              disabled={!previewUrl || uploadMutation.isPending}
+              disabled={!selectedFile || uploadMutation.isPending}
               className="flex-1"
             >
               {uploadMutation.isPending ? (

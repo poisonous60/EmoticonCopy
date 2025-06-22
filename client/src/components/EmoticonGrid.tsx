@@ -52,7 +52,8 @@ export default function EmoticonGrid({
 
   const handleCopyEmoticon = async (emoticon: Emoticon) => {
     try {
-      await copyToClipboard(emoticon.url);
+      const imageUrl = `/uploads/${emoticon.filename}`;
+      await copyToClipboard(imageUrl);
       
       // Add to recently copied (max 20 items)
       setRecentlyCopied(prev => {
@@ -107,7 +108,7 @@ export default function EmoticonGrid({
           >
             <div className="w-full h-full aspect-square relative">
               <img
-                src={emoticon.url}
+                src={`/uploads/${emoticon.filename}`}
                 alt={emoticon.title || "Emoticon"}
                 className="w-full h-full object-cover"
                 loading="lazy"

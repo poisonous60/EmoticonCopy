@@ -126,7 +126,10 @@ export class MemStorage implements IStorage {
     const id = this.currentEmoticonId++;
     const emoticon: Emoticon = { 
       id,
-      url: insertEmoticon.url,
+      filename: insertEmoticon.filename,
+      originalName: insertEmoticon.originalName || null,
+      mimeType: insertEmoticon.mimeType,
+      fileSize: insertEmoticon.fileSize,
       category: insertEmoticon.category,
       subcategory: insertEmoticon.subcategory ?? null,
       tags: insertEmoticon.tags || null,

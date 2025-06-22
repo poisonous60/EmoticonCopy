@@ -117,12 +117,13 @@ Changelog:
   - Recently copied emoticons now display in main grid when selected
   - Fixed infinite re-render loop in EmoticonGrid component
   - Updated filter bar to show appropriate titles for different views
-- June 22, 2025. Implemented emoticon upload feature with URL validation
-  - Created UploadDialog component with URL input and image validation
-  - Added image URL verification to ensure valid images before upload
-  - Integrated with existing category/subcategory system
-  - Emoticons uploaded through dialog automatically appear in grid
-  - Removed sidebar preview images for cleaner interface
+- June 22, 2025. Converted to file upload system with drag & drop functionality
+  - Replaced URL-based storage with actual file storage using multer
+  - Created drag & drop upload interface with file validation
+  - Files stored in uploads/ directory with unique UUIDs
+  - Database schema updated to store filename, file size, and MIME type
+  - Static file serving configured for uploaded images
+  - Upload dialog supports drag & drop and click-to-select functionality
 ```
 
 ## User Preferences
