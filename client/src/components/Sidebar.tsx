@@ -17,6 +17,8 @@ interface SidebarProps {
   setSelectedSubcategory: (subcategory: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  showRecentlyCopied: boolean;
+  setShowRecentlyCopied: (show: boolean) => void;
 }
 
 export default function Sidebar({
@@ -27,7 +29,9 @@ export default function Sidebar({
   selectedSubcategory,
   setSelectedSubcategory,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  showRecentlyCopied,
+  setShowRecentlyCopied
 }: SidebarProps) {
   const [recentlyCopied] = useLocalStorage<Emoticon[]>("recently-copied", []);
 
@@ -59,10 +63,23 @@ export default function Sidebar({
 
           {/* Recently Copied */}
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <button
+              onClick={() => {
+                setShowRecentlyCopied(true);
+                setSelectedCategory("");
+                setSelectedSubcategory("");
+                setSearchQuery("");
+                setOpen(false); // Close sidebar on mobile
+              }}
+              className={`w-full text-left text-sm font-semibold mb-3 flex items-center p-2 rounded-lg transition-colors ${
+                showRecentlyCopied 
+                  ? 'text-primary bg-primary/10' 
+                  : 'text-gray-700 hover:text-primary hover:bg-gray-50'
+              }`}
+            >
               <Clock className="h-4 w-4 mr-2" />
               최근 복사한 이모티콘
-            </h3>
+            </button>
             {recentlyCopied.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
                 {recentlyCopied.slice(0, 6).map((emoticon, index) => (
@@ -95,6 +112,7 @@ export default function Sidebar({
                 setSelectedCategory={setSelectedCategory}
                 selectedSubcategory={selectedSubcategory}
                 setSelectedSubcategory={setSelectedSubcategory}
+                setShowRecentlyCopied={setShowRecentlyCopied}
               />
             )}
           </div>

@@ -10,12 +10,14 @@ interface EmoticonGridProps {
   searchQuery: string;
   selectedCategory: string;
   selectedSubcategory: string;
+  showRecentlyCopied: boolean;
 }
 
 export default function EmoticonGrid({ 
   searchQuery, 
   selectedCategory, 
-  selectedSubcategory 
+  selectedSubcategory,
+  showRecentlyCopied
 }: EmoticonGridProps) {
   const [recentlyCopied, setRecentlyCopied] = useLocalStorage<Emoticon[]>("recently-copied", []);
   
@@ -25,7 +27,7 @@ export default function EmoticonGrid({
   // Build query parameters
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
-    params.set('limit', '100'); // Load more items at once to simplify pagination
+    params.set('limit', '100');
     
     if (searchQuery) {
       params.set('search', searchQuery);
@@ -40,9 +42,13 @@ export default function EmoticonGrid({
     return params.toString();
   }, [searchQuery, selectedCategory, selectedSubcategory]);
 
-  const { data: emoticons = [], isLoading } = useQuery<Emoticon[]>({
+  const { data: apiEmoticons = [], isLoading } = useQuery<Emoticon[]>({
     queryKey: ['/api/emoticons', queryParams],
+    enabled: !showRecentlyCopied, // Only fetch from API when not showing recently copied
   });
+
+  // Use recently copied emoticons when showRecentlyCopied is true
+  const emoticons = showRecentlyCopied ? recentlyCopied : apiEmoticons;
 
   const handleCopyEmoticon = async (emoticon: Emoticon) => {
     try {
@@ -75,7 +81,8 @@ export default function EmoticonGrid({
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600">
-            {searchQuery ? `"${searchQuery}" 검색 결과` : 
+            {showRecentlyCopied ? '최근 복사한 이모티콘' :
+             searchQuery ? `"${searchQuery}" 검색 결과` : 
              selectedSubcategory ? `${selectedCategory} > ${selectedSubcategory}` :
              selectedCategory ? selectedCategory : '전체 이모티콘'}
           </span>
@@ -84,7 +91,9 @@ export default function EmoticonGrid({
           </span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">최신순</span>
+          <span className="text-sm text-gray-600">
+            {showRecentlyCopied ? '복사순' : '최신순'}
+          </span>
         </div>
       </div>
 

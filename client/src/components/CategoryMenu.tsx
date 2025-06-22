@@ -9,6 +9,7 @@ interface CategoryMenuProps {
   setSelectedCategory: (category: string) => void;
   selectedSubcategory: string;
   setSelectedSubcategory: (subcategory: string) => void;
+  setShowRecentlyCopied?: (show: boolean) => void;
 }
 
 const categoryIcons: Record<string, any> = {
@@ -30,7 +31,8 @@ export default function CategoryMenu({
   selectedCategory,
   setSelectedCategory,
   selectedSubcategory,
-  setSelectedSubcategory
+  setSelectedSubcategory,
+  setShowRecentlyCopied
 }: CategoryMenuProps) {
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
@@ -52,6 +54,7 @@ export default function CategoryMenu({
       setSelectedCategory(category);
       setSelectedSubcategory("");
     }
+    setShowRecentlyCopied?.(false);
     toggleCategory(category);
   };
 
@@ -61,6 +64,7 @@ export default function CategoryMenu({
     } else {
       setSelectedSubcategory(subcategory);
     }
+    setShowRecentlyCopied?.(false);
   };
 
   return (

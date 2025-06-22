@@ -8,6 +8,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [showRecentlyCopied, setShowRecentlyCopied] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,6 +29,8 @@ export default function Home() {
           setSelectedSubcategory={setSelectedSubcategory}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          showRecentlyCopied={showRecentlyCopied}
+          setShowRecentlyCopied={setShowRecentlyCopied}
         />
         
         {/* Sidebar Overlay */}
@@ -43,6 +46,7 @@ export default function Home() {
             searchQuery={searchQuery}
             selectedCategory={selectedCategory}
             selectedSubcategory={selectedSubcategory}
+            showRecentlyCopied={showRecentlyCopied}
           />
         </main>
       </div>

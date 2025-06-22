@@ -111,6 +111,12 @@ Changelog:
   - Created database schema for emoticons and users tables
   - Populated database with 20 sample emoticons across all categories
   - Added database connection and query functionality
+- June 22, 2025. Implemented recently copied emoticons main view feature
+  - Added "최근 복사한 이모티콘" clickable button in sidebar
+  - Created showRecentlyCopied state management across components
+  - Recently copied emoticons now display in main grid when selected
+  - Fixed infinite re-render loop in EmoticonGrid component
+  - Updated filter bar to show appropriate titles for different views
 ```
 
 ## User Preferences
