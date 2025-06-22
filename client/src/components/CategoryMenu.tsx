@@ -20,10 +20,10 @@ const categoryIcons: Record<string, any> = {
 };
 
 const categoryColors: Record<string, string> = {
-  "디시콘": "bg-blue-100 text-blue-600",
-  "아카콘": "bg-green-100 text-green-600",
-  "카톡이모티콘": "bg-yellow-100 text-yellow-600",
-  "기타": "bg-purple-100 text-purple-600",
+  "디시콘": "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+  "아카콘": "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+  "카톡이모티콘": "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400",
+  "기타": "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
 };
 
 export default function CategoryMenu({
@@ -84,8 +84,11 @@ export default function CategoryMenu({
               <Button
                 variant="ghost"
                 className={`
-                  w-full justify-between p-3 h-auto border border-gray-200 rounded-lg
-                  ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-white hover:bg-gray-50'}
+                  w-full justify-between p-3 h-auto border border-gray-200 dark:border-gray-700 rounded-lg
+                  ${isSelected 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+                  }
                 `}
                 onClick={() => handleCategorySelect(category)}
               >
@@ -111,7 +114,7 @@ export default function CategoryMenu({
                     w-full justify-start text-sm py-2 px-3 rounded-md
                     ${selectedSubcategory === subcategory 
                       ? 'bg-primary text-primary-foreground' 
-                      : 'text-gray-600 hover:bg-gray-100'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
                   onClick={() => handleSubcategorySelect(subcategory)}
