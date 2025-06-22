@@ -41,7 +41,7 @@ export default function EmoticonGrid({
     queryParams.set('subcategory', selectedSubcategory);
   }
 
-  const { data: emoticons, isLoading: queryLoading } = useQuery({
+  const { data: emoticons = [], isLoading: queryLoading } = useQuery<Emoticon[]>({
     queryKey: [`/api/emoticons?${queryParams.toString()}`],
     enabled: !isLoading,
   });
@@ -55,7 +55,7 @@ export default function EmoticonGrid({
 
   // Update emoticons when data changes
   useEffect(() => {
-    if (emoticons) {
+    if (emoticons && Array.isArray(emoticons)) {
       if (page === 0) {
         setAllEmoticons(emoticons);
       } else {
@@ -137,20 +137,21 @@ export default function EmoticonGrid({
         {allEmoticons.map((emoticon) => (
           <div
             key={emoticon.id}
-            className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden emoticon-item"
+            className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden emoticon-item"
             onClick={() => handleCopyEmoticon(emoticon)}
           >
-            <div className="aspect-square relative">
+            <div className="w-full h-full aspect-square relative">
               <img
                 src={emoticon.url}
                 alt={emoticon.title || "Emoticon"}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                style={{ width: '200px', height: '200px' }}
               />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300">
-                  <div className="bg-white rounded-full p-3 shadow-lg">
-                    <Copy className="h-5 w-5 pinterest-red" />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-200">
+                  <div className="bg-white rounded-full p-2 shadow-lg">
+                    <Copy className="h-4 w-4 pinterest-red" />
                   </div>
                 </div>
               </div>

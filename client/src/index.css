@@ -94,8 +94,27 @@
   
   .emoticon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, 200px);
+    gap: 16px;
+    justify-content: center;
+    padding: 0 16px;
+  }
+  
+  /* Mobile: 3 columns */
+  @media (max-width: 768px) {
+    .emoticon-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 0 8px;
+    }
+  }
+  
+  /* Tablet */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .emoticon-grid {
+      grid-template-columns: repeat(auto-fill, 180px);
+      gap: 12px;
+    }
   }
 }
 

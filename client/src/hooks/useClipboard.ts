@@ -5,28 +5,91 @@ export function useClipboard() {
 
   const copyToClipboard = async (imageUrl: string): Promise<void> => {
     try {
-      // For images, we need to fetch the image as blob and copy it to clipboard
-      if (navigator.clipboard && window.ClipboardItem) {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
+      // Create an image element and convert it to PNG using canvas
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      return new Promise((resolve, reject) => {
+        img.onload = async () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+              throw new Error('Could not get canvas context');
+            }
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+            
+            canvas.toBlob(async (pngBlob) => {
+              if (pngBlob && navigator.clipboard && window.ClipboardItem) {
+                try {
+                  await navigator.clipboard.write([
+                    new ClipboardItem({
+                      'image/png': pngBlob
+                    })
+                  ]);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  resolve();
+                } catch (clipboardError) {
+                  console.warn('Clipboard image write failed, falling back to URL copy:', clipboardError);
+                  // Fallback to URL copy
+                  await navigator.clipboard.writeText(imageUrl);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  resolve();
+                }
+              } else {
+                // Fallback: copy the URL to clipboard
+                await navigator.clipboard.writeText(imageUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+                resolve();
+              }
+            }, 'image/png');
+          } catch (canvasError) {
+            console.warn('Canvas conversion failed, falling back to URL copy:', canvasError);
+            // Fallback to URL copy
+            try {
+              await navigator.clipboard.writeText(imageUrl);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+              resolve();
+            } catch (urlError) {
+              reject(urlError);
+            }
+          }
+        };
         
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            [blob.type]: blob
-          })
-        ]);
+        img.onerror = async () => {
+          console.warn('Image load failed, falling back to URL copy');
+          try {
+            await navigator.clipboard.writeText(imageUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+            resolve();
+          } catch (urlError) {
+            reject(urlError);
+          }
+        };
         
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } else {
-        // Fallback: copy the URL to clipboard
+        img.src = imageUrl;
+      });
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Final fallback: try to copy URL
+      try {
         await navigator.clipboard.writeText(imageUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+      } catch (fallbackError) {
+        console.error('Even URL copy failed:', fallbackError);
+        throw error;
       }
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
-      throw error;
     }
   };
 
