@@ -1,0 +1,115 @@
+# Replit.md
+
+## Overview
+
+This is a React-based emoticon sharing and copying application built with a modern full-stack architecture. The application allows users to browse, search, and copy various types of emoticons (디시콘, 아카콘, 카톡이모티콘, etc.) to their clipboard. It features a Pinterest-inspired UI with a masonry grid layout and comprehensive filtering capabilities.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **Routing**: Wouter for lightweight client-side routing
+- **UI Components**: shadcn/ui component library with Radix UI primitives
+- **Styling**: Tailwind CSS with custom CSS variables for theming
+- **State Management**: TanStack Query (React Query) for server state management
+- **Form Handling**: React Hook Form with Zod validation
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js
+- **Language**: TypeScript with ESM modules
+- **API Design**: RESTful API with JSON responses
+- **Data Storage**: In-memory storage (MemStorage) with plans for PostgreSQL integration
+- **Database ORM**: Drizzle ORM configured for PostgreSQL
+- **Session Management**: Express sessions with PostgreSQL session store
+
+### Development Environment
+- **Platform**: Replit with Node.js 20, Web, and PostgreSQL 16 modules
+- **Hot Reload**: Vite dev server with HMR
+- **Error Handling**: Runtime error overlay for development
+- **Code Quality**: TypeScript strict mode with comprehensive type checking
+
+## Key Components
+
+### Database Schema
+- **Emoticons Table**: Stores emoticon metadata including URL, category, subcategory, tags, and title
+- **Users Table**: User authentication with username/password (prepared for future implementation)
+- **Categories**: Hierarchical categorization (디시콘, 아카콘, 카톡이모티콘, 기타) with subcategories
+
+### API Endpoints
+- `GET /api/emoticons` - Retrieve emoticons with pagination and filtering
+- `GET /api/emoticons/:id` - Get single emoticon details
+- Search functionality with query parameters
+- Category and subcategory filtering
+
+### UI Components
+- **Header**: Navigation with search functionality and user actions
+- **Sidebar**: Category navigation with collapsible menu structure
+- **EmoticonGrid**: Masonry layout for displaying emoticons with infinite scroll
+- **CategoryMenu**: Hierarchical category selection with icons and colors
+
+### Core Features
+- **Clipboard Integration**: One-click copying of emoticon images to clipboard
+- **Search**: Real-time search across emoticon titles and tags
+- **Filtering**: Multi-level category and subcategory filtering
+- **Responsive Design**: Mobile-first approach with collapsible sidebar
+- **Local Storage**: Recently copied emoticons tracking
+
+## Data Flow
+
+1. **Initial Load**: Application fetches emoticons with default pagination
+2. **User Interaction**: Search queries and filter selections trigger new API requests
+3. **State Management**: TanStack Query handles caching, background updates, and loading states
+4. **Clipboard Operations**: Browser Clipboard API integration with fallback to URL copying
+5. **Local Persistence**: Recently copied items stored in localStorage
+
+## External Dependencies
+
+### Core Dependencies
+- **@tanstack/react-query**: Server state management
+- **drizzle-orm**: Database ORM with PostgreSQL support
+- **@neondatabase/serverless**: PostgreSQL database driver
+- **wouter**: Lightweight routing library
+- **zod**: Runtime type validation
+
+### UI Dependencies
+- **@radix-ui/react-***: Accessible UI primitives
+- **tailwindcss**: Utility-first CSS framework
+- **class-variance-authority**: Type-safe variant generation
+- **lucide-react**: Icon library
+
+### Development Dependencies
+- **vite**: Build tool and dev server
+- **typescript**: Type checking and compilation
+- **eslint**: Code linting (configured but not visible in files)
+
+## Deployment Strategy
+
+### Production Build
+- **Frontend**: Vite builds optimized static assets to `dist/public`
+- **Backend**: ESBuild bundles server code with external packages
+- **Environment**: NODE_ENV=production with optimized configurations
+
+### Replit Deployment
+- **Target**: Autoscale deployment on Replit infrastructure
+- **Build Command**: `npm run build` (builds both frontend and backend)
+- **Start Command**: `npm run start` (runs production server)
+- **Port Configuration**: Internal port 5000 mapped to external port 80
+
+### Database Integration
+- PostgreSQL 16 module configured in Replit
+- Drizzle migrations in `./migrations` directory
+- Environment variable `DATABASE_URL` required for database connection
+
+## Changelog
+
+```
+Changelog:
+- June 22, 2025. Initial setup
+```
+
+## User Preferences
+
+```
+Preferred communication style: Simple, everyday language.
+```
