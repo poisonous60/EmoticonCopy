@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useCallback } from "react";
+import React, { useMemo } from "react";
 import { Copy } from "lucide-react";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -17,76 +17,32 @@ export default function EmoticonGrid({
   selectedCategory, 
   selectedSubcategory 
 }: EmoticonGridProps) {
-  const [page, setPage] = useState(0);
-  const [allEmoticons, setAllEmoticons] = useState<Emoticon[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [recentlyCopied, setRecentlyCopied] = useLocalStorage<Emoticon[]>("recently-copied", []);
   
   const { copyToClipboard } = useClipboard();
   const { toast } = useToast();
 
   // Build query parameters
-  const queryParams = new URLSearchParams();
-  queryParams.set('offset', (page * 20).toString());
-  queryParams.set('limit', '20');
-  
-  if (searchQuery) {
-    queryParams.set('search', searchQuery);
-  }
-  if (selectedCategory) {
-    queryParams.set('category', selectedCategory);
-  }
-  if (selectedSubcategory) {
-    queryParams.set('subcategory', selectedSubcategory);
-  }
-
-  const { data: emoticons = [], isLoading: queryLoading } = useQuery<Emoticon[]>({
-    queryKey: [`/api/emoticons?${queryParams.toString()}`],
-    enabled: !isLoading,
-  });
-
-  // Reset when filters change
-  useEffect(() => {
-    setPage(0);
-    setAllEmoticons([]);
-    setHasMore(true);
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set('limit', '100'); // Load more items at once to simplify pagination
+    
+    if (searchQuery) {
+      params.set('search', searchQuery);
+    }
+    if (selectedCategory) {
+      params.set('category', selectedCategory);
+    }
+    if (selectedSubcategory) {
+      params.set('subcategory', selectedSubcategory);
+    }
+    
+    return params.toString();
   }, [searchQuery, selectedCategory, selectedSubcategory]);
 
-  // Update emoticons when data changes
-  useEffect(() => {
-    if (emoticons && Array.isArray(emoticons)) {
-      if (page === 0) {
-        setAllEmoticons(emoticons);
-      } else {
-        setAllEmoticons(prev => [...prev, ...emoticons]);
-      }
-      
-      if (emoticons.length < 20) {
-        setHasMore(false);
-      }
-      setIsLoading(false);
-    }
-  }, [emoticons, page]);
-
-  // Infinite scroll
-  const loadMore = useCallback(() => {
-    if (!queryLoading && hasMore && !isLoading) {
-      setIsLoading(true);
-      setPage(prev => prev + 1);
-    }
-  }, [queryLoading, hasMore, isLoading]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
-        loadMore();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadMore]);
+  const { data: emoticons = [], isLoading } = useQuery<Emoticon[]>({
+    queryKey: ['/api/emoticons', queryParams],
+  });
 
   const handleCopyEmoticon = async (emoticon: Emoticon) => {
     try {
@@ -124,7 +80,7 @@ export default function EmoticonGrid({
              selectedCategory ? selectedCategory : '전체 이모티콘'}
           </span>
           <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600">
-            {allEmoticons.length}개
+            {emoticons.length}개
           </span>
         </div>
         <div className="flex items-center space-x-2">
@@ -134,7 +90,7 @@ export default function EmoticonGrid({
 
       {/* Emoticon Grid */}
       <div className="emoticon-grid">
-        {allEmoticons.map((emoticon) => (
+        {emoticons.map((emoticon) => (
           <div
             key={emoticon.id}
             className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden emoticon-item"
@@ -161,24 +117,17 @@ export default function EmoticonGrid({
       </div>
 
       {/* Loading Indicator */}
-      {(queryLoading || isLoading) && (
+      {isLoading && (
         <div className="flex justify-center items-center py-8">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span>더 많은 이모티콘 로딩 중...</span>
+            <span>이모티콘 로딩 중...</span>
           </div>
         </div>
       )}
 
-      {/* No more results */}
-      {!hasMore && allEmoticons.length > 0 && (
-        <div className="text-center py-8 text-gray-500">
-          모든 이모티콘을 불러왔습니다.
-        </div>
-      )}
-
       {/* No results */}
-      {!queryLoading && allEmoticons.length === 0 && (
+      {!isLoading && emoticons.length === 0 && (
         <div className="text-center py-16">
           <div className="text-gray-400 mb-4">
             <Copy className="h-16 w-16 mx-auto" />

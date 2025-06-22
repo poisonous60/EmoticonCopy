@@ -12,6 +12,10 @@ export const emoticons = pgTable("emoticons", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const emoticonRelations = {
+  // Add relations here if needed in the future
+};
+
 export const insertEmoticonSchema = createInsertSchema(emoticons).omit({
   id: true,
   createdAt: true,

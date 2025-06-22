@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEmoticonSchema } from "@shared/schema";
 import { z } from "zod";
+import { seedDatabase } from "./seed";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get emoticons with optional filtering
@@ -75,6 +76,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(categories);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+
+  // Seed database route
+  app.post("/api/seed", async (req, res) => {
+    try {
+      await seedDatabase();
+      res.json({ message: "Database seeded successfully" });
+    } catch (error) {
+      console.error("Seeding error:", error);
+      res.status(500).json({ error: "Failed to seed database" });
     }
   });
 

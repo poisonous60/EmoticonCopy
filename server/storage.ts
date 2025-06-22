@@ -1,4 +1,6 @@
 import { emoticons, users, type Emoticon, type InsertEmoticon, type User, type InsertUser } from "@shared/schema";
+import { db } from "./db";
+import { eq, ilike, or, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -149,4 +151,76 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getEmoticons(offset = 0, limit = 20, category?: string, subcategory?: string): Promise<Emoticon[]> {
+    let query = db.select().from(emoticons);
+    
+    if (category && subcategory) {
+      query = query.where(and(eq(emoticons.category, category), eq(emoticons.subcategory, subcategory)));
+    } else if (category) {
+      query = query.where(eq(emoticons.category, category));
+    } else if (subcategory) {
+      query = query.where(eq(emoticons.subcategory, subcategory));
+    }
+    
+    const result = await query
+      .orderBy(desc(emoticons.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return result;
+  }
+
+  async getEmoticonById(id: number): Promise<Emoticon | undefined> {
+    const [emoticon] = await db.select().from(emoticons).where(eq(emoticons.id, id));
+    return emoticon || undefined;
+  }
+
+  async createEmoticon(insertEmoticon: InsertEmoticon): Promise<Emoticon> {
+    const [emoticon] = await db
+      .insert(emoticons)
+      .values(insertEmoticon)
+      .returning();
+    return emoticon;
+  }
+
+  async searchEmoticons(query: string, offset = 0, limit = 20): Promise<Emoticon[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    
+    const result = await db
+      .select()
+      .from(emoticons)
+      .where(
+        or(
+          ilike(emoticons.title, searchPattern),
+          ilike(emoticons.category, searchPattern),
+          ilike(emoticons.subcategory, searchPattern)
+        )
+      )
+      .orderBy(desc(emoticons.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return result;
+  }
+}
+
+export const storage = new DatabaseStorage();

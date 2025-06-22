@@ -19,7 +19,7 @@ This is a React-based emoticon sharing and copying application built with a mode
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ESM modules
 - **API Design**: RESTful API with JSON responses
-- **Data Storage**: In-memory storage (MemStorage) with plans for PostgreSQL integration
+- **Data Storage**: PostgreSQL database with Drizzle ORM integration
 - **Database ORM**: Drizzle ORM configured for PostgreSQL
 - **Session Management**: Express sessions with PostgreSQL session store
 
@@ -106,6 +106,11 @@ This is a React-based emoticon sharing and copying application built with a mode
 ```
 Changelog:
 - June 22, 2025. Initial setup
+- June 22, 2025. Added PostgreSQL database integration with Drizzle ORM
+  - Replaced in-memory storage with DatabaseStorage class
+  - Created database schema for emoticons and users tables
+  - Populated database with 20 sample emoticons across all categories
+  - Added database connection and query functionality
 ```
 
 ## User Preferences
