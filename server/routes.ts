@@ -55,7 +55,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ensure uploads directory exists
   await ensureUploadsDir();
   
-  // Serve uploaded files statically with CORS headers
+  // Serve images from database Base64 data
+  app.get('/api/emoticons/:id/image', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const emoticon = await storage.getEmoticonById(id);
+      
+      if (!emoticon || !emoticon.fileData) {
+        return res.status(404).json({ error: 'Image not found' });
+      }
+      
+      const buffer = Buffer.from(emoticon.fileData, 'base64');
+      res.set({
+        'Content-Type': emoticon.mimeType,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'public, max-age=31536000',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error serving image:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Keep static file serving as fallback for existing files
   app.use('/uploads', (req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', '*');
@@ -143,12 +167,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { category = "기타", subcategory, title, tags } = req.body;
       
+      // Convert file to Base64 for database storage
+      const fileData = fileBuffer.toString('base64');
+      
       const emoticon = await storage.createEmoticon({
         filename: req.file.filename,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         fileSize: req.file.size,
         fileHash,
+        fileData,
         category,
         subcategory: subcategory || null,
         title: title || req.file.originalname.split('.')[0],

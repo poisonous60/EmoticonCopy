@@ -62,7 +62,7 @@ export default function EmoticonGrid({
     }
 
     try {
-      const imageUrl = `/uploads/${emoticon.filename}`;
+      const imageUrl = `/api/emoticons/${emoticon.id}/image`;
       await copyToClipboard(imageUrl);
       
       // Add to recently copied (max 20 items)
@@ -125,7 +125,7 @@ export default function EmoticonGrid({
             >
               <div className="w-full relative">
                 <img
-                  src={`/uploads/${emoticon.filename}`}
+                  src={`/api/emoticons/${emoticon.id}/image`}
                   alt={emoticon.title || "Emoticon"}
                   className={`w-full h-auto object-contain ${
                     isMobile ? 'select-all pointer-events-auto' : 'select-none'

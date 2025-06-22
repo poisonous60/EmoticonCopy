@@ -158,6 +158,13 @@ Changelog:
   - Maintained desktop clipboard functionality while improving mobile experience
   - Simplified file storage to use local uploads/ directory for consistency
   - Removed touch event handlers that interfered with natural mobile selection
+- June 22, 2025. Implemented Base64 database storage to solve preview/deploy environment separation
+  - Added fileData field to emoticons table for Base64 encoded image storage
+  - Created /api/emoticons/:id/image endpoint to serve images from database
+  - Migrated existing uploaded files to database storage with Base64 encoding
+  - Updated frontend to use new database-based image API endpoint
+  - Solved preview and deploy environment file sharing by centralizing storage in database
+  - Both environments now share the same PostgreSQL database and see all uploaded images
 ```
 
 ## User Preferences
