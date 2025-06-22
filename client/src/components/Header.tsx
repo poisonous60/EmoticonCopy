@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Menu, Upload, User, Sun, Moon } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import UploadDialog from "./UploadDialog";
+import { useQuery } from "@tanstack/react-query";
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -12,6 +14,10 @@ interface HeaderProps {
 
 export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSearchQuery }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
+  
+  const { data: categories } = useQuery({
+    queryKey: ["/api/categories"],
+  });
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background dark:bg-background border-b border-border z-50">
@@ -42,13 +48,9 @@ export default function Header({ sidebarOpen, setSidebarOpen, searchQuery, setSe
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button 
-            className="hidden md:flex items-center space-x-2 bg-pinterest-red hover:bg-red-700 text-white rounded-full"
-            size="sm"
-          >
-            <Upload className="h-4 w-4" />
-            <span>업로드</span>
-          </Button>
+          <div className="hidden md:block">
+            {categories && <UploadDialog categories={categories} variant="header" />}
+          </div>
           <Button 
             variant="ghost" 
             size="sm" 

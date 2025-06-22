@@ -7,9 +7,10 @@ import { Upload, Loader2, X, ImageIcon } from "lucide-react";
 
 interface UploadDialogProps {
   categories: Record<string, string[]>;
+  variant?: "header" | "sidebar";
 }
 
-export default function UploadDialog({ categories }: UploadDialogProps) {
+export default function UploadDialog({ categories, variant = "sidebar" }: UploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -139,9 +140,17 @@ export default function UploadDialog({ categories }: UploadDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button 
+          variant={variant === "header" ? "default" : "outline"} 
+          size="sm" 
+          className={`gap-2 ${variant === "header" 
+            ? "bg-pinterest-red hover:bg-red-700 text-white rounded-full flex items-center space-x-2" 
+            : ""
+          }`}
+        >
           <Upload className="h-4 w-4" />
-          업로드
+          {variant === "header" && <span>업로드</span>}
+          {variant === "sidebar" && "업로드"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
