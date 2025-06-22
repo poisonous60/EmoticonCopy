@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import CategoryMenu from "./CategoryMenu";
+import UploadDialog from "./UploadDialog";
 import { Search, Clock, Upload } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { Emoticon } from "@shared/schema";
@@ -102,10 +103,9 @@ export default function Sidebar({
 
           {/* Upload Button Mobile */}
           <div className="md:hidden mt-6">
-            <Button className="w-full bg-pinterest-red hover:bg-red-700 text-white rounded-lg">
-              <Upload className="h-4 w-4 mr-2" />
-              이모티콘 업로드
-            </Button>
+            {categories && (
+              <UploadDialog categories={categories} />
+            )}
           </div>
         </div>
       </div>
