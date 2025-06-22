@@ -11,6 +11,8 @@ export interface IStorage {
   getEmoticonById(id: number): Promise<Emoticon | undefined>;
   createEmoticon(emoticon: InsertEmoticon): Promise<Emoticon>;
   searchEmoticons(query: string, offset?: number, limit?: number): Promise<Emoticon[]>;
+  getEmoticonByHash(hash: string): Promise<Emoticon | undefined>;
+  updateEmoticonUploadDate(id: number): Promise<Emoticon>;
 }
 
 export class MemStorage implements IStorage {
@@ -223,6 +225,25 @@ export class DatabaseStorage implements IStorage {
       .offset(offset);
     
     return result;
+  }
+
+  async getEmoticonByHash(hash: string): Promise<Emoticon | undefined> {
+    const [emoticon] = await db
+      .select()
+      .from(emoticons)
+      .where(eq(emoticons.fileHash, hash));
+    
+    return emoticon || undefined;
+  }
+
+  async updateEmoticonUploadDate(id: number): Promise<Emoticon> {
+    const [emoticon] = await db
+      .update(emoticons)
+      .set({ createdAt: new Date() })
+      .where(eq(emoticons.id, id))
+      .returning();
+    
+    return emoticon;
   }
 }
 

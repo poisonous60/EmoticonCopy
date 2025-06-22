@@ -124,6 +124,11 @@ Changelog:
   - Database schema updated to store filename, file size, and MIME type
   - Static file serving configured for uploaded images
   - Upload dialog supports drag & drop and click-to-select functionality
+- June 22, 2025. Implemented hash-based duplicate detection and cleanup
+  - Added SHA-256 file hash calculation for duplicate detection
+  - Duplicate uploads show success message but update existing entry date
+  - Failed uploads automatically cleaned from uploads folder and database
+  - Database schema includes fileHash field with unique constraint
 ```
 
 ## User Preferences

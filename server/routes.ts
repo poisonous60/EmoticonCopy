@@ -8,6 +8,8 @@ import { storage } from "./storage";
 import { insertEmoticonSchema } from "@shared/schema";
 import { z } from "zod";
 import { seedDatabase } from "./seed";
+import crypto from "crypto";
+import fs from "fs/promises";
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
@@ -83,9 +85,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create new emoticon with file upload
   app.post("/api/emoticons", upload.single('image'), async (req, res) => {
+    let uploadedFile = null;
+    
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file uploaded" });
+      }
+
+      uploadedFile = req.file;
+
+      // Validate that it's an image
+      if (!req.file.mimetype.startsWith('image/')) {
+        // Cleanup failed upload
+        await fs.unlink(req.file.path).catch(() => {});
+        return res.status(400).json({ error: "File must be an image" });
+      }
+
+      // Calculate file hash for duplicate detection
+      const fileBuffer = await fs.readFile(req.file.path);
+      const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+      // Check for existing emoticon with same hash
+      const existingEmoticon = await storage.getEmoticonByHash(fileHash);
+      
+      if (existingEmoticon) {
+        // Delete the newly uploaded file since it's a duplicate
+        await fs.unlink(req.file.path).catch(() => {});
+        
+        // Update the upload date of existing emoticon
+        const updatedEmoticon = await storage.updateEmoticonUploadDate(existingEmoticon.id);
+        
+        // Return success response (as requested, show success but don't create new entry)
+        return res.status(201).json(updatedEmoticon);
       }
 
       const { category = "기타", subcategory, title, tags } = req.body;
@@ -95,6 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         fileSize: req.file.size,
+        fileHash,
         category,
         subcategory: subcategory || null,
         title: title || req.file.originalname.split('.')[0],
@@ -104,6 +136,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(emoticon);
     } catch (error) {
       console.error("Error creating emoticon:", error);
+      
+      // Cleanup failed upload
+      if (uploadedFile) {
+        await fs.unlink(uploadedFile.path).catch(() => {});
+      }
+      
       res.status(500).json({ error: "Failed to create emoticon" });
     }
   });

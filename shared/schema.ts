@@ -8,6 +8,7 @@ export const emoticons = pgTable("emoticons", {
   originalName: text("original_name"), // Original uploaded file name
   mimeType: text("mime_type").notNull(), // image/png, image/jpeg, etc.
   fileSize: integer("file_size").notNull(), // File size in bytes
+  fileHash: text("file_hash").notNull().unique(), // SHA-256 hash for duplicate detection
   category: text("category").notNull(), // 디시콘, 아카콘, 카톡이모티콘, 기타
   subcategory: text("subcategory"), // 게임, 영상, 캐릭터, etc.
   tags: text("tags").array().default([]),
