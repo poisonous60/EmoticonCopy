@@ -106,13 +106,12 @@ export default function EmoticonGrid({
             className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden emoticon-item"
             onClick={() => handleCopyEmoticon(emoticon)}
           >
-            <div className="w-full h-full aspect-square relative">
+            <div className="w-full relative">
               <img
                 src={`/uploads/${emoticon.filename}`}
                 alt={emoticon.title || "Emoticon"}
-                className="w-full h-full object-cover"
+                className="w-full h-auto object-contain"
                 loading="lazy"
-                style={{ width: '200px', height: '200px' }}
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
                 <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-200">
