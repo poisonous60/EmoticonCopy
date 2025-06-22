@@ -89,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get emoticons with optional filtering
   app.get("/api/emoticons", async (req, res) => {
     try {
-      const { offset = "0", limit = "20", category, subcategory, search } = req.query;
+      const { offset = "0", limit = "20", category, subcategory, search, sort = "newest" } = req.query;
       
       let emoticons;
       if (search) {
@@ -103,7 +103,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parseInt(offset as string),
           parseInt(limit as string),
           category as string,
-          subcategory as string
+          subcategory as string,
+          sort as string
         );
       }
       

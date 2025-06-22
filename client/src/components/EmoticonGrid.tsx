@@ -11,13 +11,17 @@ interface EmoticonGridProps {
   selectedCategory: string;
   selectedSubcategory: string;
   showRecentlyCopied: boolean;
+  sortOrder: "newest" | "oldest" | "copied";
+  setSortOrder: (order: "newest" | "oldest" | "copied") => void;
 }
 
 export default function EmoticonGrid({ 
   searchQuery, 
   selectedCategory, 
   selectedSubcategory,
-  showRecentlyCopied
+  showRecentlyCopied,
+  sortOrder,
+  setSortOrder
 }: EmoticonGridProps) {
   const [recentlyCopied, setRecentlyCopied] = useLocalStorage<Emoticon[]>("recently-copied", []);
   
@@ -28,6 +32,7 @@ export default function EmoticonGrid({
   const baseParams = useMemo(() => {
     const params: Record<string, string> = {
       limit: '20', // Change to 20 per page for infinite scroll
+      sort: sortOrder,
     };
     
     if (searchQuery) {
@@ -41,7 +46,7 @@ export default function EmoticonGrid({
     }
     
     return params;
-  }, [searchQuery, selectedCategory, selectedSubcategory]);
+  }, [searchQuery, selectedCategory, selectedSubcategory, sortOrder]);
 
   // Infinite query for API emoticons
   const {
@@ -150,24 +155,56 @@ export default function EmoticonGrid({
     }
   };
 
+  // Handle sort order cycling
+  const handleSortClick = () => {
+    if (showRecentlyCopied) return; // Don't change sort for recently copied
+    
+    const nextOrder = {
+      newest: "oldest" as const,
+      oldest: "copied" as const,
+      copied: "newest" as const,
+    };
+    
+    setSortOrder(nextOrder[sortOrder]);
+  };
+
+  // Get sort display text
+  const getSortText = () => {
+    if (showRecentlyCopied) return '복사순';
+    
+    switch (sortOrder) {
+      case 'newest': return '최신순';
+      case 'oldest': return '오래된순';
+      case 'copied': return '복사순';
+      default: return '최신순';
+    }
+  };
+
   return (
     <div className="p-4 lg:p-6">
       {/* Filter Bar */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
             {showRecentlyCopied ? '최근 복사한 이모티콘' :
              searchQuery ? `"${searchQuery}" 검색 결과` : 
              selectedSubcategory ? `${selectedCategory} > ${selectedSubcategory}` :
              selectedCategory ? selectedCategory : '전체 이모티콘'}
           </span>
-          <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600">
+          <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300">
             {emoticons.length}개
           </span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">
-            {showRecentlyCopied ? '복사순' : '최신순'}
+          <span 
+            className={`text-sm transition-colors ${
+              showRecentlyCopied 
+                ? 'text-gray-600 dark:text-gray-400' 
+                : 'text-primary hover:text-primary/80 cursor-pointer font-medium'
+            }`}
+            onClick={handleSortClick}
+          >
+            {getSortText()}
           </span>
         </div>
       </div>

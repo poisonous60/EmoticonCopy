@@ -1,13 +1,13 @@
 import { emoticons, users, type Emoticon, type InsertEmoticon, type User, type InsertUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike, or, desc, and } from "drizzle-orm";
+import { eq, ilike, or, desc, asc, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
-  getEmoticons(offset?: number, limit?: number, category?: string, subcategory?: string): Promise<Emoticon[]>;
+  getEmoticons(offset?: number, limit?: number, category?: string, subcategory?: string, sort?: string): Promise<Emoticon[]>;
   getEmoticonById(id: number): Promise<Emoticon | undefined>;
   createEmoticon(emoticon: InsertEmoticon): Promise<Emoticon>;
   searchEmoticons(query: string, offset?: number, limit?: number): Promise<Emoticon[]>;
@@ -175,7 +175,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getEmoticons(offset = 0, limit = 20, category?: string, subcategory?: string): Promise<Emoticon[]> {
+  async getEmoticons(offset = 0, limit = 20, category?: string, subcategory?: string, sort = 'newest'): Promise<Emoticon[]> {
     let query = db.select().from(emoticons);
     
     if (category && subcategory) {
@@ -186,8 +186,19 @@ export class DatabaseStorage implements IStorage {
       query = query.where(eq(emoticons.subcategory, subcategory));
     }
     
+    // Apply sorting based on sort parameter
+    if (sort === 'oldest') {
+      query = query.orderBy(asc(emoticons.createdAt));
+    } else if (sort === 'copied') {
+      // For copied sort, we'll use createdAt in descending order for now
+      // This could be enhanced with a separate copyCount field in the future
+      query = query.orderBy(desc(emoticons.createdAt));
+    } else {
+      // Default to newest
+      query = query.orderBy(desc(emoticons.createdAt));
+    }
+    
     const result = await query
-      .orderBy(desc(emoticons.createdAt))
       .limit(limit)
       .offset(offset);
     

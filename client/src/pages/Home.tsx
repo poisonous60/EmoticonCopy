@@ -9,6 +9,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [showRecentlyCopied, setShowRecentlyCopied] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "copied">("newest");
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,6 +48,8 @@ export default function Home() {
             selectedCategory={selectedCategory}
             selectedSubcategory={selectedSubcategory}
             showRecentlyCopied={showRecentlyCopied}
+            sortOrder={sortOrder}
+            setSortOrder={setSortOrder}
           />
         </main>
       </div>
