@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import React, { useMemo } from "react";
-import { Copy } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import React, { useMemo, useCallback, useRef, useEffect, useState } from "react";
+import { Copy, Loader2 } from "lucide-react";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useToast } from "@/hooks/use-toast";
@@ -25,30 +25,94 @@ export default function EmoticonGrid({
   const { toast } = useToast();
 
   // Build query parameters
-  const queryParams = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set('limit', '100');
+  const baseParams = useMemo(() => {
+    const params: Record<string, string> = {
+      limit: '20', // Change to 20 per page for infinite scroll
+    };
     
     if (searchQuery) {
-      params.set('search', searchQuery);
+      params.search = searchQuery;
     }
     if (selectedCategory) {
-      params.set('category', selectedCategory);
+      params.category = selectedCategory;
     }
     if (selectedSubcategory) {
-      params.set('subcategory', selectedSubcategory);
+      params.subcategory = selectedSubcategory;
     }
     
-    return params.toString();
+    return params;
   }, [searchQuery, selectedCategory, selectedSubcategory]);
 
-  const { data: apiEmoticons = [], isLoading } = useQuery<Emoticon[]>({
-    queryKey: ['/api/emoticons', queryParams],
+  // Infinite query for API emoticons
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ['/api/emoticons', baseParams],
+    queryFn: async ({ pageParam = 0 }) => {
+      const params = new URLSearchParams({
+        ...baseParams,
+        offset: pageParam.toString(),
+      });
+      
+      const response = await fetch(`/api/emoticons?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch emoticons');
+      }
+      
+      const emoticons: Emoticon[] = await response.json();
+      return emoticons;
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // If the last page has fewer than 20 items, we've reached the end
+      if (lastPage.length < 20) return undefined;
+      // Otherwise, return the offset for the next page
+      return allPages.length * 20;
+    },
+    initialPageParam: 0,
     enabled: !showRecentlyCopied, // Only fetch from API when not showing recently copied
   });
 
+  // Flatten all pages of API emoticons
+  const apiEmoticons = useMemo(() => {
+    return data?.pages.flatMap(page => page) || [];
+  }, [data]);
+
   // Use recently copied emoticons when showRecentlyCopied is true
   const emoticons = showRecentlyCopied ? recentlyCopied : apiEmoticons;
+
+  // Infinite scroll implementation
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showRecentlyCopied) return; // Don't use infinite scroll for recently copied
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px',
+      }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, showRecentlyCopied]);
 
   const handleCopyEmoticon = async (emoticon: Emoticon) => {
     // Check if mobile device
@@ -148,28 +212,47 @@ export default function EmoticonGrid({
         })}
       </div>
 
-      {/* Loading Indicator */}
+      {/* Infinite Scroll Trigger */}
+      {!showRecentlyCopied && !isLoading && emoticons.length > 0 && (
+        <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
+          {isFetchingNextPage && (
+            <div className="flex items-center space-x-2 text-gray-500">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>더 많은 이모티콘 로딩 중...</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Initial Loading Indicator */}
       {isLoading && (
         <div className="flex justify-center items-center py-8">
           <div className="flex items-center space-x-2 text-gray-500">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <Loader2 className="h-6 w-6 animate-spin" />
             <span>이모티콘 로딩 중...</span>
           </div>
         </div>
       )}
 
-      {/* No results */}
+      {/* Empty State */}
       {!isLoading && emoticons.length === 0 && (
-        <div className="text-center py-16">
-          <div className="text-gray-400 mb-4">
-            <Copy className="h-16 w-16 mx-auto" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            검색 결과가 없습니다
-          </h3>
-          <p className="text-gray-500">
-            다른 키워드로 검색해보세요.
+        <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-6xl mb-4">😔</div>
+          <p className="text-lg font-medium mb-2">이모티콘이 없습니다</p>
+          <p className="text-sm">
+            {showRecentlyCopied 
+              ? "아직 복사한 이모티콘이 없습니다" 
+              : searchQuery 
+                ? "검색 결과가 없습니다" 
+                : "이 카테고리에 이모티콘이 없습니다"}
           </p>
+        </div>
+      )}
+
+      {/* End of Data Indicator */}
+      {!showRecentlyCopied && !isLoading && !hasNextPage && emoticons.length > 0 && (
+        <div className="flex justify-center items-center py-6 text-gray-400">
+          <span className="text-sm">모든 이모티콘을 불러왔습니다</span>
         </div>
       )}
     </div>
