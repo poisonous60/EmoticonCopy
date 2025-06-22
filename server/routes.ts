@@ -55,8 +55,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ensure uploads directory exists
   await ensureUploadsDir();
   
-  // Serve uploaded files statically
-  app.use('/uploads', express.static(UPLOADS_DIR));
+  // Serve uploaded files statically with CORS headers
+  app.use('/uploads', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', '*');
+    next();
+  }, express.static(UPLOADS_DIR));
   
   // Get emoticons with optional filtering
   app.get("/api/emoticons", async (req, res) => {
