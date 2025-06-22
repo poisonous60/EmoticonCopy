@@ -4,8 +4,51 @@ export function useClipboard() {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async (imageUrl: string): Promise<void> => {
+    // Check if we're on mobile/touch device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     ('ontouchstart' in window) || 
+                     (navigator.maxTouchPoints > 0);
+
+    // For mobile devices, use a simpler approach
+    if (isMobile) {
+      try {
+        // First try copying the image URL
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(window.location.origin + imageUrl);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          return;
+        }
+        
+        // Fallback: create a temporary input element for mobile
+        const tempInput = document.createElement('input');
+        tempInput.value = window.location.origin + imageUrl;
+        tempInput.style.position = 'fixed';
+        tempInput.style.left = '-999999px';
+        tempInput.style.top = '-999999px';
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999);
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        if (successful) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          return;
+        }
+        
+        throw new Error('Mobile copy failed');
+      } catch (error) {
+        console.error('Mobile copy failed:', error);
+        throw error;
+      }
+    }
+
+    // Desktop approach - try to copy actual image
     try {
-      // Create an image element and convert it to PNG using canvas
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
@@ -21,7 +64,6 @@ export function useClipboard() {
             
             canvas.width = img.width;
             canvas.height = img.height;
-            
             ctx.drawImage(img, 0, 0);
             
             canvas.toBlob(async (pngBlob) => {
@@ -37,15 +79,13 @@ export function useClipboard() {
                   resolve();
                 } catch (clipboardError) {
                   console.warn('Clipboard image write failed, falling back to URL copy:', clipboardError);
-                  // Fallback to URL copy
-                  await navigator.clipboard.writeText(imageUrl);
+                  await navigator.clipboard.writeText(window.location.origin + imageUrl);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                   resolve();
                 }
               } else {
-                // Fallback: copy the URL to clipboard
-                await navigator.clipboard.writeText(imageUrl);
+                await navigator.clipboard.writeText(window.location.origin + imageUrl);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
                 resolve();
@@ -53,9 +93,8 @@ export function useClipboard() {
             }, 'image/png');
           } catch (canvasError) {
             console.warn('Canvas conversion failed, falling back to URL copy:', canvasError);
-            // Fallback to URL copy
             try {
-              await navigator.clipboard.writeText(imageUrl);
+              await navigator.clipboard.writeText(window.location.origin + imageUrl);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
               resolve();
@@ -68,7 +107,7 @@ export function useClipboard() {
         img.onerror = async () => {
           console.warn('Image load failed, falling back to URL copy');
           try {
-            await navigator.clipboard.writeText(imageUrl);
+            await navigator.clipboard.writeText(window.location.origin + imageUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
             resolve();
@@ -81,9 +120,8 @@ export function useClipboard() {
       });
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
-      // Final fallback: try to copy URL
       try {
-        await navigator.clipboard.writeText(imageUrl);
+        await navigator.clipboard.writeText(window.location.origin + imageUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (fallbackError) {

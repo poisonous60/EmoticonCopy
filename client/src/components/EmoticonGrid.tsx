@@ -103,8 +103,15 @@ export default function EmoticonGrid({
         {emoticons.map((emoticon) => (
           <div
             key={emoticon.id}
-            className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden emoticon-item"
+            className="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md active:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden emoticon-item active:scale-95"
             onClick={() => handleCopyEmoticon(emoticon)}
+            onTouchStart={(e) => {
+              // Prevent double-tap zoom on mobile
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
           >
             <div className="w-full relative">
               <img

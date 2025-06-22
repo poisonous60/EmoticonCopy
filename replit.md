@@ -135,6 +135,17 @@ Changelog:
   - Updated all components with dark mode styling using CSS variables
   - Theme toggle button switches between light and dark themes
   - System preference detection for initial theme selection
+- June 22, 2025. Fixed dark mode category menu visibility and upload button functionality
+  - Updated CategoryMenu component with proper dark mode colors for category tabs
+  - Added header upload button functionality with UploadDialog integration
+  - Created variant prop system for different button styles in header vs sidebar
+  - Header upload button now works on both mobile and desktop screens
+- June 22, 2025. Improved mobile image display and clipboard functionality
+  - Changed images from square crop to natural aspect ratio display
+  - Updated mobile grid layout to show full image width with proper proportions
+  - Enhanced mobile clipboard functionality with better touch device detection
+  - Added mobile-specific copy methods with fallback to document.execCommand
+  - Improved touch feedback with active states and scale animations
 ```
 
 ## User Preferences
