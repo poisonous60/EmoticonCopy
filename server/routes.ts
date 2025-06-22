@@ -11,10 +11,25 @@ import { seedDatabase } from "./seed";
 import crypto from "crypto";
 import fs from "fs/promises";
 
+// Ensure uploads directory exists and use persistent path
+import { mkdir } from "fs/promises";
+
+const UPLOADS_DIR = process.env.REPLIT_DB_URL ? '/home/runner/uploads' : 'uploads';
+
+// Create uploads directory if it doesn't exist
+async function ensureUploadsDir() {
+  try {
+    await mkdir(UPLOADS_DIR, { recursive: true });
+  } catch (error) {
+    console.warn('Could not create uploads directory:', error);
+  }
+}
+
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+  destination: async (req, file, cb) => {
+    await ensureUploadsDir();
+    cb(null, UPLOADS_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
@@ -37,8 +52,11 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Ensure uploads directory exists
+  await ensureUploadsDir();
+  
   // Serve uploaded files statically
-  app.use('/uploads', express.static('uploads'));
+  app.use('/uploads', express.static(UPLOADS_DIR));
   
   // Get emoticons with optional filtering
   app.get("/api/emoticons", async (req, res) => {

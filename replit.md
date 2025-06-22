@@ -146,6 +146,12 @@ Changelog:
   - Enhanced mobile clipboard functionality with better touch device detection
   - Added mobile-specific copy methods with fallback to document.execCommand
   - Improved touch feedback with active states and scale animations
+- June 22, 2025. Enhanced mobile clipboard for image copying and persistent file storage
+  - Improved mobile clipboard to copy actual images instead of URLs when possible
+  - Added progressive fallback: direct blob copy → canvas conversion → URL fallback
+  - Fixed file persistence across deployments using persistent storage path
+  - Configured uploads directory to survive deployment restarts
+  - Ensured uploaded images remain accessible after redeployment
 ```
 
 ## User Preferences

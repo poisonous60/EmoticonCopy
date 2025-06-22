@@ -9,38 +9,99 @@ export function useClipboard() {
                      ('ontouchstart' in window) || 
                      (navigator.maxTouchPoints > 0);
 
-    // For mobile devices, use a simpler approach
+    // For mobile devices, try to copy image first, then fallback
     if (isMobile) {
       try {
-        // First try copying the image URL
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(window.location.origin + imageUrl);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          return;
+        // Try to copy the actual image first (iOS Safari supports this)
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        
+        if (navigator.clipboard && window.ClipboardItem) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                [blob.type]: blob
+              })
+            ]);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+            return;
+          } catch (clipboardError) {
+            console.warn('Mobile image clipboard failed, trying canvas conversion:', clipboardError);
+          }
         }
+
+        // Try canvas conversion for mobile
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
         
-        // Fallback: create a temporary input element for mobile
-        const tempInput = document.createElement('input');
-        tempInput.value = window.location.origin + imageUrl;
-        tempInput.style.position = 'fixed';
-        tempInput.style.left = '-999999px';
-        tempInput.style.top = '-999999px';
-        document.body.appendChild(tempInput);
-        tempInput.focus();
-        tempInput.select();
-        tempInput.setSelectionRange(0, 99999);
-        
-        const successful = document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        
-        if (successful) {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          return;
-        }
-        
-        throw new Error('Mobile copy failed');
+        return new Promise((resolve, reject) => {
+          img.onload = async () => {
+            try {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              if (!ctx) {
+                throw new Error('Could not get canvas context');
+              }
+              
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.drawImage(img, 0, 0);
+              
+              canvas.toBlob(async (pngBlob) => {
+                if (pngBlob && navigator.clipboard && window.ClipboardItem) {
+                  try {
+                    await navigator.clipboard.write([
+                      new ClipboardItem({
+                        'image/png': pngBlob
+                      })
+                    ]);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                    resolve();
+                  } catch (clipboardError) {
+                    console.warn('Mobile clipboard write failed, falling back to URL:', clipboardError);
+                    await navigator.clipboard.writeText(window.location.origin + imageUrl);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                    resolve();
+                  }
+                } else {
+                  // Final fallback: copy URL
+                  await navigator.clipboard.writeText(window.location.origin + imageUrl);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                  resolve();
+                }
+              }, 'image/png');
+            } catch (canvasError) {
+              console.warn('Canvas conversion failed on mobile:', canvasError);
+              try {
+                await navigator.clipboard.writeText(window.location.origin + imageUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+                resolve();
+              } catch (urlError) {
+                reject(urlError);
+              }
+            }
+          };
+          
+          img.onerror = async () => {
+            console.warn('Image load failed on mobile');
+            try {
+              await navigator.clipboard.writeText(window.location.origin + imageUrl);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+              resolve();
+            } catch (urlError) {
+              reject(urlError);
+            }
+          };
+          
+          img.src = imageUrl;
+        });
       } catch (error) {
         console.error('Mobile copy failed:', error);
         throw error;
