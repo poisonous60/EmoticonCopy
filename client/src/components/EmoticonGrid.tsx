@@ -35,7 +35,7 @@ export default function EmoticonGrid({
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (emoticonId: number) => {
-      return await apiRequest(`/api/emoticons/${emoticonId}`, "DELETE");
+      return await apiRequest("DELETE", `/api/emoticons/${emoticonId}`);
     },
     onSuccess: () => {
       // Invalidate and refetch emoticons
